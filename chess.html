@@ -148,16 +148,57 @@
       return true;
     }
 
+    function isSquareUnderAttack(attackerColor, row, col) {
+      for (let r = 0; r < 8; r += 1) {
+        for (let c = 0; c < 8; c += 1) {
+          const piece = boardState[r][c];
+          if (!piece || piece[0] !== attackerColor) continue;
+          const type = piece[1];
+          const dr = row - r;
+          const dc = col - c;
+          const absDr = Math.abs(dr);
+          const absDc = Math.abs(dc);
+
+          if (type === "p") {
+            const dir = attackerColor === "w" ? -1 : 1;
+            if (dr === dir && absDc === 1) return true;
+            continue;
+          }
+
+          if (type === "n") {
+            if ((absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2)) return true;
+            continue;
+          }
+
+          if (type === "k") {
+            if (absDr <= 1 && absDc <= 1) return true;
+            continue;
+          }
+
+          if (type === "b" && absDr === absDc && isPathClear(r, c, row, col)) return true;
+          if (type === "r" && (dr === 0 || dc === 0) && isPathClear(r, c, row, col)) return true;
+          if (type === "q" && (dr === 0 || dc === 0 || absDr === absDc) && isPathClear(r, c, row, col)) return true;
+        }
+      }
+      return false;
+    }
+
     function canCastle(color, side, row) {
       if ((color === "w" && row !== 7) || (color === "b" && row !== 0)) return false;
+      const enemyColor = color === "w" ? "b" : "w";
+      if (isSquareUnderAttack(enemyColor, row, 4)) return false;
       if (side === "kingside") {
         if (!castlingRights[color].kingside) return false;
         if (boardState[row][7] !== `${color}r`) return false;
-        return !boardState[row][5] && !boardState[row][6];
+        return !boardState[row][5] && !boardState[row][6] &&
+          !isSquareUnderAttack(enemyColor, row, 5) &&
+          !isSquareUnderAttack(enemyColor, row, 6);
       }
       if (!castlingRights[color].queenside) return false;
       if (boardState[row][0] !== `${color}r`) return false;
-      return !boardState[row][1] && !boardState[row][2] && !boardState[row][3];
+      return !boardState[row][1] && !boardState[row][2] && !boardState[row][3] &&
+        !isSquareUnderAttack(enemyColor, row, 3) &&
+        !isSquareUnderAttack(enemyColor, row, 2);
     }
 
     function isLegalMove(fromR, fromC, toR, toC) {
@@ -286,7 +327,7 @@
 
         if (movingPiece[1] === "p" && Math.abs(row - from.row) === 2) {
           enPassantTarget = {
-            row: (row + from.row) / 2,
+            row: from.row + (row > from.row ? 1 : -1),
             col,
             color: movingPiece[0]
           };
