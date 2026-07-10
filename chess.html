@@ -106,7 +106,6 @@
       bq: "black queen",
       bk: "black king"
     };
-    const PAWN_DOUBLE_MOVE_DISTANCE = 2;
 
     let boardState = [
       ["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
@@ -163,7 +162,7 @@
         const startRow = color === "w" ? 6 : 1;
         if (dc === 0 && !target) {
           if (dr === dir) return true;
-          if (fromR === startRow && dr === PAWN_DOUBLE_MOVE_DISTANCE * dir && !boardState[fromR + dir][fromC]) return true;
+          if (fromR === startRow && dr === 2 * dir && !boardState[fromR + dir][fromC]) return true;
         }
         if (absDc === 1 && dr === dir && target && target[0] !== color) return true;
         return false;
@@ -228,12 +227,12 @@
         for (let col = 0; col < 8; col += 1) {
           const square = squares[row][col];
           square.className = `square ${(row + col) % 2 === 0 ? "light" : "dark"}`;
-          if (selected && selected.row === row && selected.col === col) {
+          const isSelected = !!(selected && selected.row === row && selected.col === col);
+          if (isSelected) {
             square.classList.add("selected");
           }
           const piece = boardState[row][col];
           const squareName = `${String.fromCharCode(97 + col)}${8 - row}`;
-          const isSelected = !!(selected && selected.row === row && selected.col === col);
           square.textContent = piece ? PIECES[piece] : "";
           square.setAttribute("aria-label", piece ? `${squareName}, ${PIECE_NAMES[piece]}` : `${squareName}, empty`);
           square.setAttribute("aria-selected", isSelected ? "true" : "false");
