@@ -72,7 +72,7 @@
   <div class="container">
     <h1>Simple Chess</h1>
     <p id="status">White to move</p>
-    <div id="board" aria-label="Chess board"></div>
+    <div id="board" aria-label="Chess board" role="grid"></div>
     <p class="note">Rules included: turns, legal piece movement, captures, and pawn promotion to queen.</p>
   </div>
 
@@ -90,6 +90,21 @@
       bb: "♝",
       bq: "♛",
       bk: "♚"
+    };
+
+    const PIECE_NAMES = {
+      wp: "white pawn",
+      wr: "white rook",
+      wn: "white knight",
+      wb: "white bishop",
+      wq: "white queen",
+      wk: "white king",
+      bp: "black pawn",
+      br: "black rook",
+      bn: "black knight",
+      bb: "black bishop",
+      bq: "black queen",
+      bk: "black king"
     };
 
     let boardState = [
@@ -202,8 +217,11 @@
             square.classList.add("selected");
           }
           const piece = boardState[row][col];
+          const squareName = `${String.fromCharCode(97 + col)}${8 - row}`;
+          const isSelected = !!(selected && selected.row === row && selected.col === col);
           square.textContent = piece ? PIECES[piece] : "";
-          square.setAttribute("aria-label", `Square ${row + 1}, ${col + 1}`);
+          square.setAttribute("aria-label", piece ? `${squareName}, ${PIECE_NAMES[piece]}` : `${squareName}, empty`);
+          square.setAttribute("aria-pressed", isSelected ? "true" : "false");
           square.addEventListener("click", () => handleSquareClick(row, col));
           board.appendChild(square);
         }
