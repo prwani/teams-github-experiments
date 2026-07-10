@@ -106,6 +106,7 @@
       bq: "black queen",
       bk: "black king"
     };
+    const PAWN_DOUBLE_MOVE_DISTANCE = 2;
 
     let boardState = [
       ["br", "bn", "bb", "bq", "bk", "bb", "bn", "br"],
@@ -120,6 +121,7 @@
 
     let selected = null;
     let currentTurn = "w";
+    const squares = [];
 
     const board = document.getElementById("board");
     const status = document.getElementById("status");
@@ -161,7 +163,7 @@
         const startRow = color === "w" ? 6 : 1;
         if (dc === 0 && !target) {
           if (dr === dir) return true;
-          if (fromR === startRow && dr === 2 * dir && !boardState[fromR + dir][fromC]) return true;
+          if (fromR === startRow && dr === PAWN_DOUBLE_MOVE_DISTANCE * dir && !boardState[fromR + dir][fromC]) return true;
         }
         if (absDc === 1 && dr === dir && target && target[0] !== color) return true;
         return false;
@@ -206,12 +208,25 @@
       render();
     }
 
-    function render() {
+    function setupBoard() {
       board.innerHTML = "";
       for (let row = 0; row < 8; row += 1) {
+        squares[row] = [];
         for (let col = 0; col < 8; col += 1) {
           const square = document.createElement("button");
           square.type = "button";
+          square.setAttribute("role", "gridcell");
+          square.addEventListener("click", () => handleSquareClick(row, col));
+          squares[row][col] = square;
+          board.appendChild(square);
+        }
+      }
+    }
+
+    function render() {
+      for (let row = 0; row < 8; row += 1) {
+        for (let col = 0; col < 8; col += 1) {
+          const square = squares[row][col];
           square.className = `square ${(row + col) % 2 === 0 ? "light" : "dark"}`;
           if (selected && selected.row === row && selected.col === col) {
             square.classList.add("selected");
@@ -221,13 +236,12 @@
           const isSelected = !!(selected && selected.row === row && selected.col === col);
           square.textContent = piece ? PIECES[piece] : "";
           square.setAttribute("aria-label", piece ? `${squareName}, ${PIECE_NAMES[piece]}` : `${squareName}, empty`);
-          square.setAttribute("aria-pressed", isSelected ? "true" : "false");
-          square.addEventListener("click", () => handleSquareClick(row, col));
-          board.appendChild(square);
+          square.setAttribute("aria-selected", isSelected ? "true" : "false");
         }
       }
     }
 
+    setupBoard();
     render();
   </script>
 </body>
