@@ -213,6 +213,7 @@
         squares[row] = [];
         for (let col = 0; col < 8; col += 1) {
           const square = document.createElement("button");
+          square.type = "button";
           square.addEventListener("click", () => handleSquareClick(row, col));
           squares[row][col] = square;
           board.appendChild(square);
@@ -225,7 +226,7 @@
         for (let col = 0; col < 8; col += 1) {
           const square = squares[row][col];
           square.className = `square ${(row + col) % 2 === 0 ? "light" : "dark"}`;
-          const isSelected = !!(selected && selected.row === row && selected.col === col);
+          const isSelected = selected && selected.row === row && selected.col === col;
           if (isSelected) {
             square.classList.add("selected");
           }
