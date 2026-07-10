@@ -72,7 +72,7 @@
   <div class="container">
     <h1>Simple Chess</h1>
     <p id="status">White to move</p>
-    <div id="board" aria-label="Chess board" role="grid"></div>
+    <div id="board" aria-label="Chess board"></div>
     <p class="note">Rules included: turns, legal piece movement, captures, and pawn promotion to queen.</p>
   </div>
 
@@ -213,8 +213,6 @@
         squares[row] = [];
         for (let col = 0; col < 8; col += 1) {
           const square = document.createElement("button");
-          square.type = "button";
-          square.setAttribute("role", "gridcell");
           square.addEventListener("click", () => handleSquareClick(row, col));
           squares[row][col] = square;
           board.appendChild(square);
