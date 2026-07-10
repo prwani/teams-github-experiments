@@ -120,6 +120,11 @@
 
     let selected = null;
     let currentTurn = "w";
+    let enPassantTarget = null;
+    let castlingRights = {
+      w: { kingside: true, queenside: true },
+      b: { kingside: true, queenside: true }
+    };
     const squares = [];
 
     const board = document.getElementById("board");
@@ -141,6 +146,18 @@
         c += stepC;
       }
       return true;
+    }
+
+    function canCastle(color, side, row) {
+      if ((color === "w" && row !== 7) || (color === "b" && row !== 0)) return false;
+      if (side === "kingside") {
+        if (!castlingRights[color].kingside) return false;
+        if (boardState[row][7] !== `${color}r`) return false;
+        return !boardState[row][5] && !boardState[row][6];
+      }
+      if (!castlingRights[color].queenside) return false;
+      if (boardState[row][0] !== `${color}r`) return false;
+      return !boardState[row][1] && !boardState[row][2] && !boardState[row][3];
     }
 
     function isLegalMove(fromR, fromC, toR, toC) {
@@ -165,6 +182,17 @@
           if (fromR === startRow && dr === 2 * dir && !boardState[fromR + dir][fromC]) return true;
         }
         if (absDc === 1 && dr === dir && target && target[0] !== color) return true;
+        if (
+          absDc === 1 &&
+          dr === dir &&
+          !target &&
+          enPassantTarget &&
+          enPassantTarget.row === toR &&
+          enPassantTarget.col === toC &&
+          enPassantTarget.color !== color
+        ) {
+          return true;
+        }
         return false;
       }
 
@@ -172,9 +200,39 @@
       if (type === "b") return absDr === absDc && isPathClear(fromR, fromC, toR, toC);
       if (type === "q") return (dr === 0 || dc === 0 || absDr === absDc) && isPathClear(fromR, fromC, toR, toC);
       if (type === "n") return (absDr === 2 && absDc === 1) || (absDr === 1 && absDc === 2);
-      if (type === "k") return absDr <= 1 && absDc <= 1;
+      if (type === "k") {
+        if (absDr <= 1 && absDc <= 1) return true;
+        if (dr === 0 && absDc === 2 && fromC === 4) {
+          if (dc === 2) return canCastle(color, "kingside", fromR);
+          if (dc === -2) return canCastle(color, "queenside", fromR);
+        }
+        return false;
+      }
 
       return false;
+    }
+
+    function updateCastlingRights(piece, fromR, fromC, toR, toC, capturedPiece) {
+      if (piece === "wk") {
+        castlingRights.w.kingside = false;
+        castlingRights.w.queenside = false;
+      } else if (piece === "bk") {
+        castlingRights.b.kingside = false;
+        castlingRights.b.queenside = false;
+      } else if (piece === "wr" && fromR === 7 && fromC === 7) {
+        castlingRights.w.kingside = false;
+      } else if (piece === "wr" && fromR === 7 && fromC === 0) {
+        castlingRights.w.queenside = false;
+      } else if (piece === "br" && fromR === 0 && fromC === 7) {
+        castlingRights.b.kingside = false;
+      } else if (piece === "br" && fromR === 0 && fromC === 0) {
+        castlingRights.b.queenside = false;
+      }
+
+      if (capturedPiece === "wr" && toR === 7 && toC === 7) castlingRights.w.kingside = false;
+      if (capturedPiece === "wr" && toR === 7 && toC === 0) castlingRights.w.queenside = false;
+      if (capturedPiece === "br" && toR === 0 && toC === 7) castlingRights.b.kingside = false;
+      if (capturedPiece === "br" && toR === 0 && toC === 0) castlingRights.b.queenside = false;
     }
 
     function promotePawnIfNeeded(row, col) {
@@ -197,8 +255,45 @@
       const from = selected;
       const movingPiece = boardState[from.row][from.col];
       if (movingPiece && movingPiece[0] === currentTurn && isLegalMove(from.row, from.col, row, col)) {
+        let capturedPiece = boardState[row][col];
+        const isEnPassantCapture =
+          movingPiece[1] === "p" &&
+          from.col !== col &&
+          !capturedPiece &&
+          enPassantTarget &&
+          enPassantTarget.row === row &&
+          enPassantTarget.col === col &&
+          enPassantTarget.color !== movingPiece[0];
+
+        if (isEnPassantCapture) {
+          capturedPiece = boardState[from.row][col];
+          boardState[from.row][col] = null;
+        }
+
+        updateCastlingRights(movingPiece, from.row, from.col, row, col, capturedPiece);
         boardState[row][col] = movingPiece;
         boardState[from.row][from.col] = null;
+
+        if (movingPiece[1] === "k" && Math.abs(col - from.col) === 2) {
+          if (col > from.col) {
+            boardState[row][5] = boardState[row][7];
+            boardState[row][7] = null;
+          } else {
+            boardState[row][3] = boardState[row][0];
+            boardState[row][0] = null;
+          }
+        }
+
+        if (movingPiece[1] === "p" && Math.abs(row - from.row) === 2) {
+          enPassantTarget = {
+            row: (row + from.row) / 2,
+            col,
+            color: movingPiece[0]
+          };
+        } else {
+          enPassantTarget = null;
+        }
+
         promotePawnIfNeeded(row, col);
         currentTurn = currentTurn === "w" ? "b" : "w";
         status.textContent = currentTurn === "w" ? "White to move" : "Black to move";
