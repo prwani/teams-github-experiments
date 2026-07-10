@@ -235,7 +235,6 @@
           const squareName = `${String.fromCharCode(97 + col)}${8 - row}`;
           square.textContent = piece ? PIECES[piece] : "";
           square.setAttribute("aria-label", piece ? `${squareName}, ${PIECE_NAMES[piece]}` : `${squareName}, empty`);
-          square.setAttribute("aria-selected", isSelected ? "true" : "false");
         }
       }
     }
