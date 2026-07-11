@@ -44,7 +44,7 @@ class GitHubClient:
         self.headers = {
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer " + token,
-            "User-Agent": "teams-github-experiments/list-open-prs",
+            "User-Agent": "prwani/teams-github-experiments",
             "X-GitHub-Api-Version": "2022-11-28",
         }
 
