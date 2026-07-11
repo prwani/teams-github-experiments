@@ -72,7 +72,7 @@ def get_token() -> str:
     raise RuntimeError("Set GITHUB_TOKEN or GH_TOKEN before running this script.")
 
 
-def fetch_open_pull_requests(client: GitHubClient) -> Tuple[str, List[Dict[str, Any]]]:
+def fetch_owner_and_open_pull_requests(client: GitHubClient) -> Tuple[str, List[Dict[str, Any]]]:
     user, _ = client.get_json(f"{client.api_base_url}/user")
     if not isinstance(user, dict) or "login" not in user:
         raise TypeError("Unexpected response from /user")
@@ -112,7 +112,7 @@ def fetch_open_pull_requests(client: GitHubClient) -> Tuple[str, List[Dict[str, 
                 }
             )
 
-    return owner, sorted(results, key=lambda pr: (str(pr["repository"]), int(pr["number"])))
+    return owner, sorted(results, key=lambda pr: (pr["repository"], pr["number"]))
 
 
 def print_human_readable(owner: str, pull_requests: List[Dict[str, Any]]) -> None:
@@ -134,7 +134,7 @@ def main() -> int:
 
     try:
         client = GitHubClient(get_token(), args.api_base_url)
-        owner, pull_requests = fetch_open_pull_requests(client)
+        owner, pull_requests = fetch_owner_and_open_pull_requests(client)
     except (RuntimeError, TypeError, error.HTTPError, error.URLError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
